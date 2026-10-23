@@ -95,9 +95,9 @@ firmware later reimplements the same Modbus register map the sim already defines
 |---|---|---|
 | Plant process sim + Modbus/TCP slave | [`rvb_sim/`](rvb_sim/) | ✅ |
 | Vulnerable plant HMI (IT→OT pivot) | [`rvb_hmi/`](rvb_hmi/) | ✅ |
-| Hybrid Blue/Red scoring | [`rvb_score/`](rvb_score/) | ✅ |
+| Hybrid Blue/Red scoring (pluggable objective registry) | [`rvb_score/`](rvb_score/) | ✅ |
 | Demos (process, HMI, scoreboard) | [`scripts/`](scripts/) | ✅ |
-| Tests | [`tests/`](tests/) | ✅ 21 passing |
+| Tests | [`tests/`](tests/) | ✅ 25 passing |
 
 ## Roadmap & progress
 
@@ -142,10 +142,22 @@ PYTHONPATH=. python -m rvb_sim.plant_server          # Modbus/TCP on :5020
 PYTHONPATH=. python scripts/run_hmi.py               # HMI on http://localhost:8080
 ```
 
+## Extending the game
+
+New board subsystems (crossings, signals, traffic, trains, switches, cars) and
+new scoring objectives are added **without editing the core**, following a
+Green-Thumb-style passthrough contract: each subsystem exposes telemetry,
+commands, and a self-describing manifest; the core only moves the envelope.
+Objectives live in a pluggable registry and reference subsystem signals by name
+(works for both teams, supports reclaim/"that's mine!" recoveries and hidden
+Easter eggs). The plant is the reference implementation and the board's final
+endpoint. Full contract: [`docs/EXTENDING.md`](docs/EXTENDING.md).
+
 ## Docs
 
 - [`docs/DESIGN.md`](docs/DESIGN.md) — full architecture & design decisions
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — living build status
+- [`docs/EXTENDING.md`](docs/EXTENDING.md) — subsystem & objective contract (how to add things)
 - [`docs/VULNS.md`](docs/VULNS.md) — planted HMI vulnerabilities + Blue fixes
 
 ## Tech

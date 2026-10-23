@@ -1,6 +1,6 @@
 # R vs B Train Game — Roadmap & Build Status
 
-*Living doc — updated as milestones move. Last updated: 2026-10-23 (M4 complete).*
+*Living doc — updated as milestones move. Last updated: 2026-10-23 (M4 + extensibility contract).*
 
 Design lives in [`DESIGN.md`](DESIGN.md); this tracks **what's planned, what's
 done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started.
@@ -13,7 +13,9 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
 | M1 | Process-sim plant + Modbus slave | ✅ | `rvb_sim/`; 20-min margin tuned, Modbus sabotage proven |
 | M2 | Plant HMI web app (vulnerable, Modbus-wired) | ✅ | `rvb_hmi/`; 4 planted bug classes, all proven exploitable; `docs/VULNS.md` |
 | M3 | MQTT truck + cars (autonomy, hijack path) | ⬜ | Waypoint injection / off-map steal; needs a broker |
-| M4 | Scoring service (hybrid) | ✅ | `rvb_score/`; snapshot-driven Blue/Red engine, milestones + scoreboard |
+| M4 | Scoring service (hybrid) | ✅ | `rvb_score/`; snapshot-driven engine, **pluggable objective registry** (both teams) |
+| — | Extensibility contract | ✅ | `docs/EXTENDING.md`; subsystem passthrough contract + manifest, objective registry |
+| M4b | `Subsystem`/`SubsystemRegistry` base + plant retrofit | ⬜ | build to the contract; plant as reference implementation |
 | M5 | Field-device firmware (ESP32) | ⬜ | Reimplements the §5 register map; **hardware** |
 | M6 | Network / range provisioning | ⬜ | VLANs, two Red entry tiers, attack-van jump box, offline images |
 | M7 | Blue defensive baseline | ⬜ | Documented base-tool hardening/revert path per planted vuln |
@@ -39,8 +41,17 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
   delivery + clean-round bonus; Red earns per-milestone (sustained cooling
   outage, warning silenced) plus win payouts (stolen/meltdown/timer). Takes
   `Snapshot`s (sim now, hardware telemetry later), edge-triggered and
-  auto-detected. Demo + 7 tests; suite now 21. Contested-annunciator scoring
-  works end to end (silencing a due alarm scores Red).
+  auto-detected. Contested-annunciator scoring works end to end (silencing a due
+  alarm scores Red).
+- **Pluggable objective registry + extensibility contract** — objectives are a
+  team-agnostic registry with reusable detectors (`rising_edge`, `sustained`,
+  `recovery`, `on_outcome`, `when`); adding one is a single entry, no scorer
+  surgery. Supports Blue reclaim ("that's mine!"), dormant signal objectives
+  (e.g. train derail, fires when a future subsystem supplies the signal), and
+  hidden Easter eggs. The subsystem passthrough contract (telemetry + commands +
+  self-describing manifest, core never edited) is written up in
+  `docs/EXTENDING.md`, with the plant as the reference implementation and the
+  board's final endpoint. Suite now 25 tests.
 
 ## In progress
 
@@ -48,6 +59,9 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
 
 ## Next up (unordered, pending open questions)
 
+- **M4b** — `Subsystem`/`SubsystemRegistry` base classes built to `EXTENDING.md`,
+  with the plant retrofitted as the reference implementation, then one new
+  subsystem (crossings or signals) + an objective over it, end to end.
 - **M3** — MQTT truck + cars (autonomy + hijack path); needs a broker in-container.
 - **Live scoreboard UI** — a small web view over `rvb_score` (like the HMI), once
   we want to see it on a screen rather than in the demo.

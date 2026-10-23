@@ -1,7 +1,9 @@
 """Scoring: direct snapshot-driven milestone tests + integrated scored rounds."""
 
 from rvb_sim.game import Outcome
-from rvb_score.scoring import Scorer, ScoreConfig, Snapshot, run_scored_round
+from rvb_score.scoring import (
+    Scorer, ScoreConfig, Snapshot, Objective, when, run_scored_round,
+)
 
 
 def cut_cooling(r):
@@ -82,3 +84,52 @@ def test_stolen_truck_scores_red_primary():
     r, sc = run_scored_round(events=[(30.0, steal_truck)])
     assert r.outcome is Outcome.RED_STOLEN
     assert any(e.label == "truck stolen off-map" for e in sc.events)
+
+
+# --- new objectives: reclaim (both sides), dormant signal, hidden egg -------
+
+def test_reclaim_scores_both_sides():
+    # Red holds cooling off >30s (sustained), Blue reclaims it -> both score.
+    r, sc = run_scored_round(events=[(60.0, cut_cooling), (100.0, restore_cooling)])
+    assert r.outcome is Outcome.BLUE_DELIVERED
+    ids = [e.objective_id for e in sc.events]
+    assert "red_cooling_cut" in ids          # Red: off 40s >= 30
+    assert "blue_reclaim_cooling" in ids      # Blue: "that's mine!"
+    assert sc.red_milestones == 1             # reclaim is Blue, doesn't count as Red
+    assert sc.red == ScoreConfig().red_cooling_cut
+    assert sc.blue > 0
+
+
+def test_quick_reclaim_denies_red_and_stays_clean():
+    # Blue reclaims before Red's 30s sustained award -> Red gets nothing,
+    # Blue still earns the reclaim, and the round is still clean.
+    r, sc = run_scored_round(events=[(60.0, cut_cooling), (80.0, restore_cooling)])
+    assert r.outcome is Outcome.BLUE_DELIVERED
+    labels = [e.label for e in sc.events]
+    assert "cooling sustained off" not in labels   # off only 20s < 30
+    assert "reclaimed cooling (that's mine!)" in labels
+    assert "clean round" in labels
+    assert sc.red == 0.0
+
+
+def test_dormant_signal_objective_fires_when_signal_appears():
+    # red_derail reads a signal no subsystem supplies yet; it stays dormant
+    # until that signal shows up, then fires once.
+    sc = Scorer()
+    sc.observe(snap(0, signals={"train_derailed": False}))
+    assert sc.red == 0.0
+    sc.observe(snap(1, signals={"train_derailed": True}))
+    assert any(e.objective_id == "red_derail" for e in sc.events)
+    assert sc.red == ScoreConfig().red_derail
+
+
+def test_hidden_objective_stays_off_catalog_until_fired():
+    sc = Scorer()
+    egg = Objective("egg", "blue", 50, "found the egg",
+                    detect=when(lambda s, scr: s.t >= 5), hidden=True)
+    sc.add_objective(egg)
+    assert "egg" not in [o["id"] for o in sc.catalog()]   # secret before firing
+    sc.observe(snap(0))
+    sc.observe(snap(6))                                    # t >= 5 -> fires
+    assert any(e.objective_id == "egg" for e in sc.events)
+    assert "egg" in [o["id"] for o in sc.catalog()]        # revealed once sprung
