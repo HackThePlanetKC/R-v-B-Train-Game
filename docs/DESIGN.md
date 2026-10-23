@@ -87,8 +87,12 @@ Classic IT → DMZ → OT zoning. Up to 10 players per team.
 - **Blue** starts with a legitimate route into OT (they operate it).
 - **Game-master segment:** referee + scoreboard, isolated from both teams.
 
-Boundary enforcement is itself a (configurable) Blue asset — see open questions on
-whether Blue can harden the DMZ firewall mid-round.
+**Blue defends live, with what's on the box.** Blue can harden and *revert* mid-round —
+re-close a hole Red opened, write a sabotaged coil back to safe, re-arm the annunciator,
+tighten the DMZ firewall. But the range is **offline: no package installs**. Every Blue
+defensive capability must be reachable with base tools already baked into the images
+(host firewall, config edits, process control, credential changes). This is a build rule
+for the images, not just lore — a real air-gapped OT defender's constraint.
 
 ## 5. The plant as a process simulation (the game clock)
 
@@ -182,11 +186,39 @@ one-button reset from the GM console. (Design detail TBD.)
 
 ## Open questions
 
-1. Round length, and the pressure-climb rate that satisfies the Blue-default margin.
-2. Can Blue harden the DMZ firewall mid-round, or is segmentation fixed? (A configurable
-   boundary gives Blue real defensive agency; a fixed one keeps rounds simpler.)
+1. ~~Round length~~ **20 min** (resolved). Pressure-climb tuning now lives in
+   `rvb_sim/config.py` and is validated by the sim (see §13).
+2. ~~Can Blue harden the DMZ firewall mid-round~~ **Yes — Blue reverts/hardens live,
+   offline, with base tools only** (resolved, see §4).
 3. Team-vs-team simultaneous, or Red-and-Blue alternating attempts on the clock?
 4. Exact device counts (how many cars, how many crossings/turnouts on the board).
 5. Reset mechanism detail.
 6. Which planted bug classes go on the HMI (default creds / cmd injection / authz /
    traversal) and at what difficulty per tier.
+
+## 13. Software sim (built — `rvb_sim/`)
+
+A pure-Python stand-in for the plant, built before any hardware exists so the
+Blue-default margin can be tuned empirically and the attack surface exercised.
+
+- `rvb_sim/sim.py` — `PlantModel`: deterministic process model, single source of truth.
+- `rvb_sim/game.py` — `Round`: 20-min clock, truck race, outcome resolution, clean-win
+  detection.
+- `rvb_sim/config.py` — the tuning dials (`SimConfig`).
+- `rvb_sim/plant_server.py` — a Modbus/TCP slave exposing the register map in §5 as the
+  unauthenticated OT device. The ESP32 later reimplements this same map.
+- `scripts/demo_round.py` — headless accelerated playthroughs.
+- `tests/` — margin + tug-of-war validation, plus a Modbus sabotage smoke test.
+
+Validated tuning (defaults): untouched → clean Blue win at ~8 min; Red cutting cooling
+and ignored → meltdown at ~7 min; Red cutting cooling then Blue reverting it → Blue
+recovers and delivers. `pymodbus` pinned to 3.8.x (dev-time only; 3.9+ reworked the
+datastore API).
+
+Run:
+
+```
+python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+PYTHONPATH=. python scripts/demo_round.py
+PYTHONPATH=. python -m pytest -q
+```

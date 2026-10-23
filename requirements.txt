@@ -1,0 +1,4 @@
+# Dev-time software stand-in for the ESP32 Modbus devices. Pinned to the
+# classic 3.8.x datastore API (3.9+ reworks ModbusSlaveContext/datablocks).
+pymodbus==3.8.6
+pytest>=8
