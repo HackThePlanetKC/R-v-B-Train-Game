@@ -1,6 +1,6 @@
 # R vs B Train Game — Roadmap & Build Status
 
-*Living doc — updated as milestones move. Last updated: 2026-10-23 (M4 + extensibility contract).*
+*Living doc — updated as milestones move. Last updated: 2026-10-23 (M4b complete).*
 
 Design lives in [`DESIGN.md`](DESIGN.md); this tracks **what's planned, what's
 done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started.
@@ -15,7 +15,7 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
 | M3 | MQTT truck + cars (autonomy, hijack path) | ⬜ | Waypoint injection / off-map steal; needs a broker |
 | M4 | Scoring service (hybrid) | ✅ | `rvb_score/`; snapshot-driven engine, **pluggable objective registry** (both teams) |
 | — | Extensibility contract | ✅ | `docs/EXTENDING.md`; subsystem passthrough contract + manifest, objective registry |
-| M4b | `Subsystem`/`SubsystemRegistry` base + plant retrofit | ⬜ | build to the contract; plant as reference implementation |
+| M4b | `Subsystem`/`SubsystemRegistry` base + plant retrofit | ✅ | `rvb_core/`, `subsystems/plant/` (reference) + `subsystems/crossing/` (first new one) |
 | M5 | Field-device firmware (ESP32) | ⬜ | Reimplements the §5 register map; **hardware** |
 | M6 | Network / range provisioning | ⬜ | VLANs, two Red entry tiers, attack-van jump box, offline images |
 | M7 | Blue defensive baseline | ⬜ | Documented base-tool hardening/revert path per planted vuln |
@@ -51,7 +51,14 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
   hidden Easter eggs. The subsystem passthrough contract (telemetry + commands +
   self-describing manifest, core never edited) is written up in
   `docs/EXTENDING.md`, with the plant as the reference implementation and the
-  board's final endpoint. Suite now 25 tests.
+  board's final endpoint.
+- **M4b** — `rvb_core/subsystem.py`: `Subsystem` contract + `SubsystemRegistry`
+  (namespaced telemetry map, command routing, reset). `subsystems/plant/` is the
+  reference implementation (wraps `PlantModel`, manifest = the Modbus register
+  map); `subsystems/crossing/` is the first new subsystem, added with **no core
+  or scorer change** — a crossing objective scores both sides end to end
+  (`tests/test_subsystem.py`). Snapshots merge the registry's signal map, so
+  objectives reference `plant.*` / `crossing.*` by name. Suite now 31 tests.
 
 ## In progress
 
@@ -59,9 +66,6 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
 
 ## Next up (unordered, pending open questions)
 
-- **M4b** — `Subsystem`/`SubsystemRegistry` base classes built to `EXTENDING.md`,
-  with the plant retrofitted as the reference implementation, then one new
-  subsystem (crossings or signals) + an objective over it, end to end.
 - **M3** — MQTT truck + cars (autonomy + hijack path); needs a broker in-container.
 - **Live scoreboard UI** — a small web view over `rvb_score` (like the HMI), once
   we want to see it on a screen rather than in the demo.

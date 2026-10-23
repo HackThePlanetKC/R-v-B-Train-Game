@@ -29,6 +29,12 @@ as passthrough — it does not hardcode any subsystem's field names:
 
 Plus a `reset()` for round reset (M9) and a stable, namespaced `id`.
 
+> **Built:** the base lives in [`rvb_core/subsystem.py`](../rvb_core/subsystem.py)
+> (`Subsystem` + `SubsystemRegistry`). The plant is the reference implementation
+> ([`subsystems/plant/`](../subsystems/plant/)); the crossing
+> ([`subsystems/crossing/`](../subsystems/crossing/)) is the first new subsystem,
+> added with no core/scorer change.
+
 ```python
 class Subsystem:
     id: str      # namespaced + instanced: "crossing.north", "signals.main", "plant"
@@ -138,12 +144,18 @@ detector factories cover the common shapes:
 | `when(fn)` | arbitrary `fn(snapshot, scorer)` | hidden/compound eggs |
 
 ```python
-# A Red objective over a future traffic subsystem — zero core edits:
+# A Red objective over a traffic subsystem — zero core edits. Use .get() so the
+# rule is harmless (dormant) if the subsystem isn't present on a given board.
 Objective("red_gridlock", "red", 200, "junction gridlocked",
-          detect=sustained(lambda s: s.signals["crossing.north.gates_down"]
-                                  and s.signals["signals.main.all_red"], 20),
+          detect=sustained(lambda s: s.signals.get("crossing.north.gates_down")
+                                  and s.signals.get("signals.main.all_red"), 20),
           repeatable=True)
 ```
+
+Instance-specific objectives (tied to `crossing.north`) are registered
+*alongside* their subsystem, not in the default registry; board-wide ones (plant,
+truck, derail) ship as defaults. See `tests/test_subsystem.py` for a crossing
+objective scoring both sides end to end.
 
 Rules for both teams, same mechanism:
 - `team` is `"blue"` or `"red"`.

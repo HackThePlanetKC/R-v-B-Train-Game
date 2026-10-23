@@ -96,8 +96,10 @@ firmware later reimplements the same Modbus register map the sim already defines
 | Plant process sim + Modbus/TCP slave | [`rvb_sim/`](rvb_sim/) | ✅ |
 | Vulnerable plant HMI (IT→OT pivot) | [`rvb_hmi/`](rvb_hmi/) | ✅ |
 | Hybrid Blue/Red scoring (pluggable objective registry) | [`rvb_score/`](rvb_score/) | ✅ |
+| Subsystem contract + registry (`Subsystem`/`SubsystemRegistry`) | [`rvb_core/`](rvb_core/) | ✅ |
+| Subsystems: plant (reference), crossing (first new) | [`subsystems/`](subsystems/) | ✅ |
 | Demos (process, HMI, scoreboard) | [`scripts/`](scripts/) | ✅ |
-| Tests | [`tests/`](tests/) | ✅ 25 passing |
+| Tests | [`tests/`](tests/) | ✅ 31 passing |
 
 ## Roadmap & progress
 

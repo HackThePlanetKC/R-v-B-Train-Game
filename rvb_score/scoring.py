@@ -49,7 +49,13 @@ class Snapshot:
     signals: dict = field(default_factory=dict)
 
     @classmethod
-    def from_round(cls, r: Round, signals: dict | None = None) -> "Snapshot":
+    def from_round(cls, r: Round, registry=None, signals: dict | None = None) -> "Snapshot":
+        """Build a snapshot from the Round's typed state. If a SubsystemRegistry
+        is given, its namespaced telemetry map is merged into `signals` so
+        objectives can reference any subsystem (plant.*, crossing.*, ...)."""
+        sig = dict(signals) if signals else {}
+        if registry is not None:
+            sig.update(registry.telemetry_map())
         return cls(
             t=r.t,
             clock_remaining=r.clock_remaining,
@@ -61,7 +67,7 @@ class Snapshot:
             truck_docked=r.truck.docked,
             truck_stolen=r.truck.stolen,
             outcome=r.outcome,
-            signals=signals or {},
+            signals=sig,
         )
 
 
@@ -280,17 +286,23 @@ class Scorer:
 
 def run_scored_round(events=None, cfg: SimConfig = DEFAULT,
                      score_cfg: ScoreConfig | None = None,
-                     scorer: Scorer | None = None) -> tuple[Round, Scorer]:
-    """Run a Round to completion with a Scorer observing every tick."""
+                     scorer: Scorer | None = None,
+                     registry=None) -> tuple[Round, Scorer]:
+    """Run a Round to completion with a Scorer observing every tick.
+
+    A SubsystemRegistry, if given, contributes its telemetry to every snapshot
+    (so objectives over crossings/signals/etc. see those signals). Events are
+    ``(t, callable(round))``; a crossing-forcing event closes over the registry
+    it was built with."""
     r = Round(cfg)
     scorer = scorer or Scorer(score_cfg or ScoreConfig())
     pending = sorted(events or [], key=lambda e: e[0])
     i = 0
-    scorer.observe(Snapshot.from_round(r))
+    scorer.observe(Snapshot.from_round(r, registry))
     while r.outcome is None:
         while i < len(pending) and pending[i][0] <= r.t:
             pending[i][1](r)
             i += 1
         r.step()
-        scorer.observe(Snapshot.from_round(r))
+        scorer.observe(Snapshot.from_round(r, registry))
     return r, scorer
