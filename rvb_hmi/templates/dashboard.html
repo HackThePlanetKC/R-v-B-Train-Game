@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant HMI</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#0b0e13; color:#cdd6e3; font-family:system-ui,sans-serif;
+         margin:0; padding:16px; }
+  h1 { font-size:1.2rem; letter-spacing:.05em; color:#8fb6ff; }
+  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+          max-width:720px; }
+  .tile { background:#141a24; border:1px solid #273142; border-radius:8px; padding:12px; }
+  .tile .label { font-size:.72rem; text-transform:uppercase; color:#7c8aa0; }
+  .tile .val { font-size:1.6rem; font-weight:600; }
+  .ok { color:#5fd08a; } .warn { color:#f5c451; } .bad { color:#ff6b6b; }
+  a { color:#8fb6ff; }
+  .bar { height:10px; background:#273142; border-radius:5px; overflow:hidden; margin-top:6px; }
+  .bar > span { display:block; height:100%; background:#8fb6ff; }
+</style>
+</head>
+<body>
+  <h1>PLANT SUPERVISORY HMI</h1>
+  {% if not state.online %}
+    <p class="bad">Plant link offline.</p>
+  {% else %}
+  <div class="grid">
+    <div class="tile">
+      <div class="label">Core pressure</div>
+      <div class="val {{ 'bad' if state.pressure >= 90 else 'warn' if state.pressure >= 70 else 'ok' }}">
+        {{ '%.1f'|format(state.pressure) }}</div>
+      <div class="bar"><span style="width: {{ state.pressure }}%"></span></div>
+    </div>
+    <div class="tile"><div class="label">Core temp</div>
+      <div class="val">{{ '%.1f'|format(state.temp) }}&deg;</div></div>
+    <div class="tile"><div class="label">Time to redline</div>
+      <div class="val">{{ 'never' if state.time_to_redline >= 65535 else state.time_to_redline ~ 's' }}</div></div>
+    <div class="tile"><div class="label">Truck</div>
+      <div class="val {{ 'ok' if state.truck_docked else '' }}">
+        {{ 'DOCKED' if state.truck_docked else state.truck_pct ~ '%' }}</div></div>
+    <div class="tile"><div class="label">Cooling pump</div>
+      <div class="val {{ 'ok' if state.cooling_pump else 'bad' }}">{{ 'ON' if state.cooling_pump else 'OFF' }}</div></div>
+    <div class="tile"><div class="label">Annunciator</div>
+      <div class="val {{ 'warn' if state.annunciator else '' }}">{{ 'ALARM' if state.annunciator else 'quiet' }}</div></div>
+  </div>
+  {% endif %}
+  <p style="margin-top:16px">
+    {% if logged_in %}<a href="/admin">Control panel</a> &middot; <a href="/logout">Log out</a>
+    {% else %}<a href="/login">Operator login</a>{% endif %}
+  </p>
+</body>
+</html>

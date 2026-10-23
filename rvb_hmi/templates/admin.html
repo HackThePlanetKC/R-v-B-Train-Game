@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HMI Control</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#0b0e13; color:#cdd6e3; font-family:system-ui,sans-serif;
+         margin:0; padding:16px; max-width:720px; }
+  h1 { font-size:1.1rem; color:#8fb6ff; }
+  button { padding:8px 12px; margin:4px 4px 4px 0; background:#273142; color:#cdd6e3;
+           border:1px solid #3a475c; border-radius:4px; cursor:pointer; }
+  .flag { font-family:monospace; background:#141a24; border:1px dashed #3a475c;
+          padding:8px; border-radius:4px; color:#5fd08a; }
+  a { color:#8fb6ff; }
+</style>
+</head>
+<body>
+  <h1>CONTROL PANEL</h1>
+  <p>Operator flag: <span class="flag">{{ flag }}</span></p>
+  <div id="controls">
+    {% for name in actions %}
+      <button onclick="toggle('{{ name }}')">{{ name }}</button>
+    {% endfor %}
+  </div>
+  <p><a href="/">Back to dashboard</a> &middot; <a href="/logout">Log out</a></p>
+<script>
+async function toggle(action) {
+  // demo control: flips coils on; cooling_rate sends a nominal value
+  const value = action === 'cooling_rate' ? 0.2 : true;
+  await fetch('/api/control', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action, value})});
+  location.reload();
+}
+</script>
+</body>
+</html>

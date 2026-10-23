@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HMI Login</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#0b0e13; color:#cdd6e3; font-family:system-ui,sans-serif;
+         display:grid; place-items:center; min-height:100vh; margin:0; }
+  form { background:#141a24; border:1px solid #273142; border-radius:8px;
+         padding:24px; width:260px; }
+  h1 { font-size:1rem; color:#8fb6ff; margin-top:0; }
+  input { width:100%; box-sizing:border-box; margin:6px 0; padding:8px;
+          background:#0b0e13; border:1px solid #273142; color:#cdd6e3; border-radius:4px; }
+  button { width:100%; padding:9px; margin-top:8px; background:#8fb6ff; border:0;
+           border-radius:4px; font-weight:600; cursor:pointer; }
+  .err { color:#ff6b6b; font-size:.85rem; }
+</style>
+</head>
+<body>
+  <form method="post" action="/login">
+    <h1>OPERATOR LOGIN</h1>
+    {% if error %}<p class="err">{{ error }}</p>{% endif %}
+    <input name="username" placeholder="username" autocomplete="off">
+    <input name="password" type="password" placeholder="password" autocomplete="off">
+    <button type="submit">Sign in</button>
+  </form>
+</body>
+</html>

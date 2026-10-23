@@ -2,3 +2,4 @@
 # classic 3.8.x datastore API (3.9+ reworks ModbusSlaveContext/datablocks).
 pymodbus==3.8.6
 pytest>=8
+flask>=3,<4

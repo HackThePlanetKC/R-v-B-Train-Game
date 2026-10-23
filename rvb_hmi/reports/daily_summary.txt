@@ -1,0 +1,5 @@
+Daily Plant Summary
+===================
+Shift: day
+Feed deliveries: nominal
+Cooling: within band
