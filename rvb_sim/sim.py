@@ -32,6 +32,10 @@ class PlantModel:
     feed_valve: bool = field(init=False)     # Blue default OPEN
     stack_vent: bool = field(init=False)     # default CLOSED
     cooling_rate: float = field(init=False)
+    # Contested annunciator. None = auto (follows the warning logic, an honest
+    # operator); True = forced on (Red false-trigger); False = forced off (Red
+    # silences). The effective on/off is resolved by Round, which knows the clock.
+    annunciator_override: bool | None = field(init=False)
 
     def __post_init__(self) -> None:
         self.pressure = self.cfg.pressure_start
@@ -39,6 +43,7 @@ class PlantModel:
         self.feed_valve = True
         self.stack_vent = False
         self.cooling_rate = self.cfg.cooling_rate_default
+        self.annunciator_override = None
 
     # --- dynamics ---------------------------------------------------------
 

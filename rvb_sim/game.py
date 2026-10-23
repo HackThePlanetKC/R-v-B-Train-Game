@@ -67,6 +67,10 @@ class Round:
     t: float = 0.0
     outcome: Outcome | None = None
 
+    # recomputed each step for snapshots / scoring
+    warning_due: bool = False       # the warning logic says the alarm should sound
+    annunciator_on: bool = False    # the alarm's effective state (after overrides)
+
     # sabotage bookkeeping for clean-win detection / Red scoring
     cooling_off_seconds: float = 0.0
     sabotage_logged: bool = False
@@ -101,6 +105,9 @@ class Round:
         self.plant.step(dt)
         self.truck.step(dt)
         self.t += dt
+        self.warning_due = self.plant.warning_active(self.clock_remaining)
+        override = self.plant.annunciator_override
+        self.annunciator_on = self.warning_due if override is None else override
         self.outcome = self._resolve()
         return self.outcome
 
