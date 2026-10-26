@@ -97,9 +97,10 @@ firmware later reimplements the same Modbus register map the sim already defines
 | Vulnerable plant HMI (IT→OT pivot) | [`rvb_hmi/`](rvb_hmi/) | ✅ |
 | Hybrid Blue/Red scoring (pluggable objective registry) | [`rvb_score/`](rvb_score/) | ✅ |
 | Subsystem contract + registry (`Subsystem`/`SubsystemRegistry`) | [`rvb_core/`](rvb_core/) | ✅ |
-| Subsystems: plant (reference), crossing (first new) | [`subsystems/`](subsystems/) | ✅ |
+| Subsystems: plant (reference), crossing, truck, cars | [`subsystems/`](subsystems/) | ✅ |
+| MQTT transport (bridge + dev broker) for mobile units | [`rvb_mqtt/`](rvb_mqtt/) | ✅ |
 | Demos (process, HMI, scoreboard) | [`scripts/`](scripts/) | ✅ |
-| Tests | [`tests/`](tests/) | ✅ 31 passing |
+| Tests | [`tests/`](tests/) | ✅ 44 passing |
 
 ## Roadmap & progress
 
@@ -142,6 +143,9 @@ PYTHONPATH=. python scripts/demo_score.py
 # run the plant + HMI live (two terminals)
 PYTHONPATH=. python -m rvb_sim.plant_server          # Modbus/TCP on :5020
 PYTHONPATH=. python scripts/run_hmi.py               # HMI on http://localhost:8080
+
+# run the MQTT broker + bridge with a truck and cars (the mobile-unit field bus)
+PYTHONPATH=. python scripts/run_mqtt.py              # broker on :1883, topics rvb/<id>/{command,state}
 ```
 
 ## Extending the game

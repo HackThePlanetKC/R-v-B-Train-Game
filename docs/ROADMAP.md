@@ -1,6 +1,6 @@
 # R vs B Train Game — Roadmap & Build Status
 
-*Living doc — updated as milestones move. Last updated: 2026-10-23 (M4b complete).*
+*Living doc — updated as milestones move. Last updated: 2026-10-26 (M3 complete).*
 
 Design lives in [`DESIGN.md`](DESIGN.md); this tracks **what's planned, what's
 done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started.
@@ -12,7 +12,7 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
 | M0 | Design & architecture | ✅ | `docs/DESIGN.md`; asymmetric shape, Purdue layering, two Red tiers, hybrid scoring |
 | M1 | Process-sim plant + Modbus slave | ✅ | `rvb_sim/`; 20-min margin tuned, Modbus sabotage proven |
 | M2 | Plant HMI web app (vulnerable, Modbus-wired) | ✅ | `rvb_hmi/`; 4 planted bug classes, all proven exploitable; `docs/VULNS.md` |
-| M3 | MQTT truck + cars (autonomy, hijack path) | ⬜ | Waypoint injection / off-map steal; needs a broker |
+| M3 | MQTT truck + cars (autonomy, hijack path) | ✅ | `rvb_sim/mobile.py`, `subsystems/truck`+`car`, `rvb_mqtt/`; layered truck guards, off-map steal → RED_STOLEN |
 | M4 | Scoring service (hybrid) | ✅ | `rvb_score/`; snapshot-driven engine, **pluggable objective registry** (both teams) |
 | — | Extensibility contract | ✅ | `docs/EXTENDING.md`; subsystem passthrough contract + manifest, objective registry |
 | M4b | `Subsystem`/`SubsystemRegistry` base + plant retrofit | ✅ | `rvb_core/`, `subsystems/plant/` (reference) + `subsystems/crossing/` (first new one) |
@@ -60,15 +60,27 @@ done, and what's left**. Status: ✅ done · 🔨 in progress · ⬜ not started
   (`tests/test_subsystem.py`). Snapshots merge the registry's signal map, so
   objectives reference `plant.*` / `crossing.*` by name. Suite now 31 tests.
 
+- **M3** — `rvb_sim/mobile.py` (`MobileUnit` autonomy), `subsystems/truck/` +
+  `subsystems/car/` (contract-conforming), and `rvb_mqtt/` (paho bridge + amqtt
+  dev broker). The truck is the hardest unit to take: geofence + route-lock
+  guards, both must fall (one-shot off-board waypoint, or an adjacent chain) to
+  drive it off-map; cars take a single write. Hijack proven end to end over MQTT,
+  and a truck steal syncs into the round as RED_STOLEN. 44 tests.
+  *Open refinement:* the abstract `Round.Truck` (delivery vs the 20-min clock)
+  and the physical `TruckSubsystem` (hijack surface) are still two models; the
+  physical truck idles as the hijack target in the scored sim while the abstract
+  clock owns delivery. Unifying them is deferred (doesn't block anything).
+
 ## In progress
 
 - *(nothing active — awaiting next-target pick)*
 
 ## Next up (unordered, pending open questions)
 
-- **M3** — MQTT truck + cars (autonomy + hijack path); needs a broker in-container.
 - **Live scoreboard UI** — a small web view over `rvb_score` (like the HMI), once
   we want to see it on a screen rather than in the demo.
+- **More subsystems** — signals, stoplights/traffic, switches, trains (the train
+  subsystem supplies `train_present` and the dormant `train_derailed` signal).
 - **Open design questions still blocking some work** (see DESIGN.md §Open
   questions): team-vs-team vs alternating, device counts, per-tier bug difficulty.
 

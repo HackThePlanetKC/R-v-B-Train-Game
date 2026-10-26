@@ -130,6 +130,24 @@ They default to running a set route; MQTT carries high-level intent, not motor c
 Onboard autonomy chosen over remote-brain: the units keep working if WiFi is flaky, and
 it yields a richer surface (command channel *and* sensor spoofing).
 
+**Difficulty: the truck is one of the hardest things to take — but not impossible.**
+Stealing the truck off-map must require *chaining several independent steps*, not a
+single command write, so a skilled team can do it but a lucky one-liner can't:
+
+- **Layered guards.** The truck holds a **geofence** (rejects any waypoint outside the
+  board) *and* a **route lock** (rejects waypoints that aren't a plausible next step on
+  its route). Driving it off-map means defeating **both** — disable the geofence *and*
+  either unlock the route or feed a chain of adjacent waypoints that walk it to an edge.
+- **Cars are the easy tier by contrast** — a single route/waypoint write commandeers a
+  car into a roadblock. Cars are where a newer Red player gets a first win; the truck is
+  the trophy.
+- **Blue can re-arm.** Geofence and route lock are Blue-revertible mid-round (re-enable
+  over the control path), so a half-finished truck heist can be clawed back — the
+  reclaim/"that's mine!" scoring shape applies here too.
+
+Tuning goal: a truck steal should cost Red roughly the effort of the HMI pivot plus the
+guard chain, landing it near the top of the difficulty curve without being a brick wall.
+
 ## 7. Effects — two tiers
 
 - **Terminal loss theater:** stack smoke + big siren. Fires *only* after the game

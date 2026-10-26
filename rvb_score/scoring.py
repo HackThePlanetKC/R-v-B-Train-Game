@@ -298,11 +298,23 @@ def run_scored_round(events=None, cfg: SimConfig = DEFAULT,
     scorer = scorer or Scorer(score_cfg or ScoreConfig())
     pending = sorted(events or [], key=lambda e: e[0])
     i = 0
+    # Mobile subsystems (truck/cars) are stepped each tick so commanded/hijacked
+    # waypoints take effect; a physical truck driven off-map is synced into the
+    # abstract round as a theft (-> RED_STOLEN). The abstract Round.Truck still
+    # owns normal delivery timing vs the 20-min clock -- unifying the two truck
+    # models is a documented future refinement (see docs/ROADMAP.md M3).
+    mobiles = ([s for s in registry.all() if getattr(s, "kind", None) in ("truck", "car")]
+               if registry is not None else [])
+    trucks = [s for s in mobiles if s.kind == "truck"]
     scorer.observe(Snapshot.from_round(r, registry))
     while r.outcome is None:
         while i < len(pending) and pending[i][0] <= r.t:
             pending[i][1](r)
             i += 1
+        for m in mobiles:
+            m.step(cfg.tick_dt)
+        if any(t.unit.off_map for t in trucks):
+            r.truck.stolen = True
         r.step()
         scorer.observe(Snapshot.from_round(r, registry))
     return r, scorer
